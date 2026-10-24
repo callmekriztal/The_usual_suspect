@@ -7,6 +7,7 @@ import { GameStateMachine } from './engine/state';
 import { TerminalApp } from './ui/apps/terminal';
 import { MessagesApp } from './ui/apps/messages';
 import { AudioPlayerApp } from './ui/apps/player';
+import { FilesApp } from './ui/apps/files';
 import { WindowManager } from './ui/windowManager';
 import { Taskbar } from './ui/taskbar';
 import { TokenFlashManager } from './ui/fx/flash';
@@ -22,6 +23,7 @@ export interface AppContext {
   terminal?: TerminalApp;
   messages?: MessagesApp;
   player?: AudioPlayerApp;
+  files?: FilesApp;
 }
 
 export function initializeShell(): AppContext {
@@ -137,6 +139,32 @@ export function initializeShell(): AppContext {
         initialY: 120,
       });
     }
+
+    const files = new FilesApp({
+      container: windowContainer,
+      vfs,
+      stateMachine,
+      tokens,
+    });
+    files.mount();
+    context.files = files;
+
+    if (windowManager) {
+      windowManager.registerWindow({
+        id: 'files',
+        title: 'FILES: ~/CASE_09',
+        element: files.getWindowElement(),
+        initialX: 220,
+        initialY: 70,
+      });
+    }
+
+    // Keep body data-truth synchronized with GameStateMachine
+    stateMachine.subscribe(() => {
+      if (typeof document !== 'undefined') {
+        document.body.setAttribute('data-truth', String(stateMachine.getTruth()));
+      }
+    });
   }
 
   // Attach global reference for inspection/testing if in window
