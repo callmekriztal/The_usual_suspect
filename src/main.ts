@@ -14,6 +14,8 @@ import { Taskbar } from './ui/taskbar';
 import { TokenFlashManager } from './ui/fx/flash';
 import { scrambleReveal } from './ui/fx/scramble';
 import { loadSessionStartup } from './engine/storage';
+import { AudioSynthesizer } from './audio/synth';
+import { countSolvedStrands } from './engine/strands';
 
 export interface AppContext {
   vfs: VirtualFileSystem;
@@ -23,6 +25,7 @@ export interface AppContext {
   windowManager?: WindowManager;
   taskbar?: Taskbar;
   tokenFlash?: TokenFlashManager;
+  synth?: AudioSynthesizer;
   terminal?: TerminalApp;
   messages?: MessagesApp;
   player?: AudioPlayerApp;
@@ -57,6 +60,9 @@ export function initializeShell(): AppContext {
     tokenFlash.initGlobalListeners(document);
   }
 
+  // Initialize Audio Synthesizer (Stage 10)
+  const synth = new AudioSynthesizer({ muted: true });
+
   // Initialize Desktop Window Manager
   let windowManager: WindowManager | undefined;
   const desktop = typeof document !== 'undefined' ? document.getElementById('desktop') : null;
@@ -71,6 +77,7 @@ export function initializeShell(): AppContext {
     taskbar = new Taskbar({
       element: taskbarEl,
       windowManager,
+      synth,
     });
   }
 
@@ -82,6 +89,7 @@ export function initializeShell(): AppContext {
     windowManager,
     taskbar,
     tokenFlash,
+    synth,
   };
 
   const bootScreen = typeof document !== 'undefined' ? document.getElementById('boot-screen') : null;
@@ -107,6 +115,7 @@ export function initializeShell(): AppContext {
       executor,
       stateMachine,
       tokens,
+      synth,
     });
     terminal.mount();
     context.terminal = terminal;
@@ -145,6 +154,7 @@ export function initializeShell(): AppContext {
       stateMachine,
       tokens,
       isMuted: () => taskbar?.getIsMuted() ?? true,
+      synth,
     });
     player.mount();
     context.player = player;
@@ -183,6 +193,7 @@ export function initializeShell(): AppContext {
       stateMachine,
       vfs,
       tokens,
+      synth,
     });
     board.mount();
     context.board = board;
@@ -197,7 +208,7 @@ export function initializeShell(): AppContext {
       });
     }
 
-    // Keep body data-truth synchronized with GameStateMachine
+    // Keep body data-truth and audio synth synchronized with GameStateMachine
     stateMachine.subscribe(() => {
       if (typeof document !== 'undefined') {
         document.body.setAttribute('data-truth', String(stateMachine.getTruth()));
@@ -205,7 +216,25 @@ export function initializeShell(): AppContext {
           applySkinSwap();
         }
       }
+      synth.updateSolvedStrandsCount(countSolvedStrands(stateMachine.getStrands()));
+      if (stateMachine.getTruth() >= 3 && stateMachine.getRevealPhase() === 'flipped') {
+        synth.playRoomTone();
+      }
     });
+
+    // Start fan hum if unmuted on initial load
+    synth.updateSolvedStrandsCount(countSolvedStrands(stateMachine.getStrands()));
+
+    // Global user gesture listener to resume audio context if unmuted
+    if (typeof window !== 'undefined') {
+      const handleUserGesture = () => {
+        if (taskbar && !taskbar.getIsMuted()) {
+          synth.initContext();
+        }
+      };
+      window.addEventListener('pointerdown', handleUserGesture, { passive: true });
+      window.addEventListener('keydown', handleUserGesture, { passive: true });
+    }
 
     // Global Skin Swap event listener per Build Bible Section 6
     if (typeof window !== 'undefined') {

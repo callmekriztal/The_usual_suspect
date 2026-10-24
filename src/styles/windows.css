@@ -176,7 +176,7 @@
   background-color: var(--amber) !important;
   color: #101312 !important;
   outline: 2px solid var(--amber) !important;
-  transition: background-color 0.1s ease, color 0.1s ease;
+  transition: background-color 0.08s steps(2), color 0.08s steps(2);
 }
 
 @media (prefers-reduced-motion: reduce) {

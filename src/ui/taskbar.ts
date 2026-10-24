@@ -2,10 +2,12 @@
 // Synchronizes taskbar buttons with WindowManager, handles audio mute toggle, system clock, and ident token
 
 import { WindowManager } from './windowManager';
+import { AudioSynthesizer } from '../audio/synth';
 
 export interface TaskbarOptions {
   element: HTMLElement;
   windowManager: WindowManager;
+  synth?: AudioSynthesizer;
 }
 
 export class Taskbar {
@@ -15,6 +17,7 @@ export class Taskbar {
   private clockElement: HTMLElement | null;
   private muteBtn: HTMLButtonElement | null;
   private identElement: HTMLElement | null;
+  private synth?: AudioSynthesizer;
 
   private isMuted: boolean = true;
   private clockIntervalId?: number;
@@ -24,6 +27,11 @@ export class Taskbar {
   constructor(options: TaskbarOptions) {
     this.element = options.element;
     this.windowManager = options.windowManager;
+    this.synth = options.synth;
+
+    if (this.synth) {
+      this.isMuted = this.synth.getIsMuted();
+    }
 
     this.tasksContainer = this.element.querySelector('#taskbar-tasks');
     this.clockElement = this.element.querySelector('#tray-clock');
@@ -46,6 +54,9 @@ export class Taskbar {
 
   public toggleMute(): boolean {
     this.isMuted = !this.isMuted;
+    if (this.synth) {
+      this.synth.setMuted(this.isMuted);
+    }
     this.updateMuteDisplay();
     return this.isMuted;
   }

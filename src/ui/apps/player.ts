@@ -5,12 +5,14 @@ import { TUNED_FRAGMENTS, AudioFragment } from '../../content/recordings';
 import { GameStateMachine } from '../../engine/state';
 import { TokenRegistry } from '../../engine/tokens';
 import { scrambleReveal } from '../fx/scramble';
+import { AudioSynthesizer } from '../../audio/synth';
 
 export interface AudioPlayerAppOptions {
   container: HTMLElement;
   stateMachine: GameStateMachine;
   tokens: TokenRegistry;
   isMuted?: () => boolean;
+  synth?: AudioSynthesizer;
 }
 
 export class AudioPlayerApp {
@@ -18,6 +20,7 @@ export class AudioPlayerApp {
   private stateMachine: GameStateMachine;
   private tokens: TokenRegistry;
   private isMutedFn?: () => boolean;
+  private synth?: AudioSynthesizer;
 
   private windowElement!: HTMLElement;
   private canvasEl!: HTMLCanvasElement;
@@ -52,6 +55,7 @@ export class AudioPlayerApp {
     this.stateMachine = options.stateMachine;
     this.tokens = options.tokens;
     this.isMutedFn = options.isMuted;
+    this.synth = options.synth;
 
     // Sync any pre-pinned audio fragments
     for (const frag of TUNED_FRAGMENTS) {
@@ -473,6 +477,9 @@ export class AudioPlayerApp {
         if (this.gainNode) {
           this.gainNode.gain.value = 0;
         }
+        if (this.synth) {
+          this.synth.updateRadioStatic(0, false);
+        }
         if (this.holdStartTime > 0) {
           this.holdStartTime = now;
         }
@@ -484,8 +491,13 @@ export class AudioPlayerApp {
 
       // Keep mute state synchronized immediately
       const isMuted = this.isMutedFn ? this.isMutedFn() : false;
-      if (isMuted && this.gainNode) {
-        this.gainNode.gain.value = 0;
+      if (isMuted) {
+        if (this.gainNode) {
+          this.gainNode.gain.value = 0;
+        }
+        if (this.synth) {
+          this.synth.updateRadioStatic(0, false);
+        }
       }
 
       // Check hold-to-lock timer
@@ -573,6 +585,10 @@ export class AudioPlayerApp {
   }
 
   private initAudioContext(): void {
+    if (this.synth) {
+      this.synth.initContext();
+    }
+
     if (this.audioCtx) {
       if (this.audioCtx.state === 'suspended') {
         this.audioCtx.resume().catch(() => {});
@@ -621,6 +637,13 @@ export class AudioPlayerApp {
   }
 
   private updateAudioSynth(minDistance: number): void {
+    const isMuted = this.isMutedFn ? this.isMutedFn() : false;
+    const isMin = this.windowElement?.classList.contains('minimized');
+
+    if (this.synth) {
+      this.synth.updateRadioStatic(minDistance, !isMin && !isMuted);
+    }
+
     if (!this.gainNode || !this.filterNode || !this.audioCtx) return;
 
     try {

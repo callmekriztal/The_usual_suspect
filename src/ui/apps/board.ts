@@ -5,6 +5,7 @@ import { GameStateMachine, GameStateSnapshot, REQUIRED_CONNECTIONS } from '../..
 import { VirtualFileSystem } from '../../engine/vfs';
 import { EndingCoordinator } from '../../engine/ending';
 import { TokenRegistry } from '../../engine/tokens';
+import { AudioSynthesizer } from '../../audio/synth';
 
 export interface EvidenceBoardAppOptions {
   container: HTMLElement;
@@ -12,6 +13,7 @@ export interface EvidenceBoardAppOptions {
   vfs: VirtualFileSystem;
   tokens?: TokenRegistry;
   coordinator?: EndingCoordinator;
+  synth?: AudioSynthesizer;
 }
 
 interface CardCoord {
@@ -75,12 +77,14 @@ export class EvidenceBoardApp {
 
   private selectedPinId: string | null = null;
   private unsubscribeState?: () => void;
+  private synth?: AudioSynthesizer;
 
   constructor(options: EvidenceBoardAppOptions) {
     this.container = options.container;
     this.stateMachine = options.stateMachine;
     this.vfs = options.vfs;
     this.coordinator = options.coordinator ?? new EndingCoordinator(this.vfs, this.stateMachine);
+    this.synth = options.synth;
 
     // Automatically enforce board connection requirements when board app is initialized
     this.stateMachine.enableBoardEnforcement(true);
@@ -238,6 +242,8 @@ export class EvidenceBoardApp {
       return;
     }
 
+    this.synth?.playPinClick();
+
     if (!this.selectedPinId) {
       this.selectedPinId = pinId;
       this.statusTextEl.innerHTML = `SELECTED <span class="status-highlight">${pinId}</span>. CLICK ANOTHER PIN TO CONNECT.`;
@@ -366,6 +372,13 @@ export class EvidenceBoardApp {
     const feedback = document.createElement('div');
     feedback.className = 'owner-feedback';
 
+    input.addEventListener('input', () => {
+      this.synth?.playKeyTick();
+    });
+    input.addEventListener('keydown', () => {
+      this.synth?.playKeyTick();
+    });
+
     form.appendChild(input);
     form.appendChild(feedback);
 
@@ -442,6 +455,9 @@ export class EvidenceBoardApp {
       this.revealOverlayEl.appendChild(glitchText);
       this.revealOverlayEl.appendChild(bar);
       this.windowElement.appendChild(this.revealOverlayEl);
+
+      // Cut sound for 2 seconds per Build Bible Section 9
+      this.synth?.cutSound(2000);
 
       // Start CSS animation
       requestAnimationFrame(() => {

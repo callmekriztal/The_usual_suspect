@@ -5,6 +5,7 @@ import { VirtualFileSystem } from '../../engine/vfs';
 import { CommandExecutor, CommandResult } from '../../engine/commands';
 import { TokenRegistry } from '../../engine/tokens';
 import { GameStateMachine } from '../../engine/state';
+import { AudioSynthesizer } from '../../audio/synth';
 
 export interface TerminalAppOptions {
   container: HTMLElement;
@@ -12,6 +13,7 @@ export interface TerminalAppOptions {
   executor: CommandExecutor;
   stateMachine: GameStateMachine;
   tokens: TokenRegistry;
+  synth?: AudioSynthesizer;
 }
 
 export class TerminalApp {
@@ -20,6 +22,7 @@ export class TerminalApp {
   private executor: CommandExecutor;
   private stateMachine: GameStateMachine;
   private tokens: TokenRegistry;
+  private synth?: AudioSynthesizer;
 
   private windowElement!: HTMLElement;
   private bodyElement!: HTMLElement;
@@ -37,6 +40,7 @@ export class TerminalApp {
     this.executor = options.executor;
     this.stateMachine = options.stateMachine;
     this.tokens = options.tokens;
+    this.synth = options.synth;
   }
 
   public mount(): void {
@@ -119,8 +123,13 @@ export class TerminalApp {
       this.focus();
     });
 
-    // Keyboard navigation
+    // Keyboard navigation & audio feedback
+    this.inputElement.addEventListener('input', () => {
+      this.synth?.playKeyTick();
+    });
+
     this.inputElement.addEventListener('keydown', (e: KeyboardEvent) => {
+      this.synth?.playKeyTick();
       if (e.key === 'Enter') {
         e.preventDefault();
         const cmd = this.inputElement.value;
