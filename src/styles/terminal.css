@@ -1,0 +1,103 @@
+/* DEAD PIXELS - Terminal Application Window Styles */
+
+.terminal-window {
+  width: 680px;
+  height: 420px;
+  top: 40px;
+  left: 60px;
+  background: var(--term-bg);
+  border: 1px solid #4a544e;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-window .window-titlebar {
+  background: #1c221f;
+  border-bottom: 1px solid #333d37;
+  color: #cfd8c7;
+}
+
+.terminal-body {
+  background: var(--term-bg);
+  color: var(--term-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: calc(100% - 22px);
+  cursor: text;
+}
+
+.terminal-output {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.terminal-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.terminal-line.error {
+  color: #e06c75;
+}
+
+.terminal-line.command-echo {
+  color: #e8e6dc;
+}
+
+.terminal-input-row {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.terminal-prompt {
+  color: var(--amber);
+  margin-right: 8px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--term-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 0;
+  margin: 0;
+  caret-color: var(--amber);
+}
+
+.terminal-token {
+  cursor: pointer;
+  border-bottom: 1px dotted var(--amber);
+  color: #e8e6dc;
+}
+
+.terminal-token:hover,
+.terminal-token:focus {
+  background: rgba(217, 164, 65, 0.25);
+  outline: 1px solid var(--amber);
+}
+
+.terminal-token.token-flash {
+  background: var(--amber) !important;
+  color: #101312 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-input {
+    caret-shape: block;
+  }
+}
