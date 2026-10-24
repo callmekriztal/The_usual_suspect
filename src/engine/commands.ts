@@ -172,7 +172,7 @@ export class CommandExecutor {
   }
 
   private handleHelp(): CommandResult {
-    const text = `DEAD PIXELS - Investigation Terminal v1.4
+    const text = `The_usual_suspect - Investigation Terminal v1.4
 Available commands:
   help              Display this assistance menu
   pwd               Print working directory

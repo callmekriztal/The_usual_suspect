@@ -341,7 +341,8 @@ export function initializeShell(initialSearch?: string): AppContext {
 
   // Attach global reference for inspection/testing if in window
   if (typeof window !== 'undefined') {
-    (window as unknown as { __DEAD_PIXELS__?: AppContext }).__DEAD_PIXELS__ = context;
+    (window as unknown as { __DEAD_PIXELS__?: AppContext; __THE_USUAL_SUSPECT__?: AppContext }).__DEAD_PIXELS__ = context;
+    (window as unknown as { __DEAD_PIXELS__?: AppContext; __THE_USUAL_SUSPECT__?: AppContext }).__THE_USUAL_SUSPECT__ = context;
 
     if (window.location?.search?.includes('test=terminal') && context.terminal) {
       if (bootScreen) bootScreen.style.display = 'none';

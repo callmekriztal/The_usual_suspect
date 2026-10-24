@@ -1,4 +1,4 @@
-# DEAD PIXELS
+# The_usual_suspect
 > *Every case needs a suspect.*
 
 A single-page, browser-native psychological detective mystery game. You sit before an aging ThinkPad with a case directory:
@@ -81,7 +81,7 @@ Open your browser at `http://localhost:5173` to start investigating.
 
 ## 🧪 Testing & Verification
 
-DEAD PIXELS has a comprehensive automated and browser test suite:
+The_usual_suspect has a comprehensive automated and browser test suite:
 
 ```bash
 # Run Vitest test suite (179 tests across 13 suites)
