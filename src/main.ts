@@ -8,9 +8,12 @@ import { TerminalApp } from './ui/apps/terminal';
 import { MessagesApp } from './ui/apps/messages';
 import { AudioPlayerApp } from './ui/apps/player';
 import { FilesApp } from './ui/apps/files';
+import { EvidenceBoardApp } from './ui/apps/board';
 import { WindowManager } from './ui/windowManager';
 import { Taskbar } from './ui/taskbar';
 import { TokenFlashManager } from './ui/fx/flash';
+import { scrambleReveal } from './ui/fx/scramble';
+import { loadSessionStartup } from './engine/storage';
 
 export interface AppContext {
   vfs: VirtualFileSystem;
@@ -24,13 +27,29 @@ export interface AppContext {
   messages?: MessagesApp;
   player?: AudioPlayerApp;
   files?: FilesApp;
+  board?: EvidenceBoardApp;
+}
+
+export function applySkinSwap(): void {
+  if (typeof document === 'undefined') return;
+  document.body.classList.remove('case-skin');
+  document.body.classList.add('truth-skin');
+
+  const caseElements = document.querySelectorAll<HTMLElement>('[data-case]');
+  caseElements.forEach((el) => {
+    const real = el.getAttribute('data-real');
+    if (real) {
+      scrambleReveal(el, real, 1.0);
+    }
+  });
 }
 
 export function initializeShell(): AppContext {
   const vfs = new VirtualFileSystem();
+  const stateMachine = new GameStateMachine(vfs);
+  loadSessionStartup(vfs, stateMachine);
   const executor = new CommandExecutor(vfs);
   const tokens = new TokenRegistry();
-  const stateMachine = new GameStateMachine(vfs);
 
   // Initialize Global Token Linking & Flash Effect
   const tokenFlash = new TokenFlashManager(tokens);
@@ -159,12 +178,46 @@ export function initializeShell(): AppContext {
       });
     }
 
+    const board = new EvidenceBoardApp({
+      container: windowContainer,
+      stateMachine,
+      vfs,
+      tokens,
+    });
+    board.mount();
+    context.board = board;
+
+    if (windowManager) {
+      windowManager.registerWindow({
+        id: 'board',
+        title: 'EVIDENCE BOARD: CASE_09',
+        element: board.getWindowElement(),
+        initialX: 180,
+        initialY: 40,
+      });
+    }
+
     // Keep body data-truth synchronized with GameStateMachine
     stateMachine.subscribe(() => {
       if (typeof document !== 'undefined') {
         document.body.setAttribute('data-truth', String(stateMachine.getTruth()));
+        if (stateMachine.getTruth() >= 3) {
+          applySkinSwap();
+        }
       }
     });
+
+    // Global Skin Swap event listener per Build Bible Section 6
+    if (typeof window !== 'undefined') {
+      window.addEventListener('dead-pixels-skin-swap', () => {
+        applySkinSwap();
+      });
+    }
+
+    // On startup, if restored state is already flipped / truth >= 3, apply skin swap immediately
+    if (stateMachine.getTruth() >= 3 || stateMachine.getRevealPhase() === 'flipped') {
+      applySkinSwap();
+    }
   }
 
   // Attach global reference for inspection/testing if in window

@@ -7,3 +7,5 @@ export * from './commands';
 export * from './owner';
 export * from './strands';
 export * from './state';
+export * from './storage';
+export * from './ending';
