@@ -1,0 +1,66 @@
+/* Window management styles - 1px bevelled chrome, authentic window frames */
+
+.window-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.window {
+  position: absolute;
+  pointer-events: auto;
+  background: var(--paper);
+  border: 1px solid #75756d;
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  min-width: 240px;
+  min-height: 160px;
+  font-family: var(--font-mono);
+}
+
+.window-titlebar {
+  height: 22px;
+  background: var(--title);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 6px;
+  cursor: grab;
+  font-size: 11px;
+}
+
+.window-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.window-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.window-btn {
+  width: 14px;
+  height: 14px;
+  background: var(--chrome);
+  border: 1px solid #555;
+  font-size: 9px;
+  line-height: 12px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  color: #000;
+}
+
+.window-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  background: var(--paper);
+}

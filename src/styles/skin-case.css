@@ -1,0 +1,18 @@
+/* Case Skin (Home-made investigator skin, truth 0-2) */
+
+body[data-truth="0"] .window,
+body[data-truth="1"] .window,
+body[data-truth="2"] .window {
+  background: var(--paper);
+  border: 2px solid #5a5a52;
+}
+
+.case-stamp {
+  display: inline-block;
+  padding: 1px 4px;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}

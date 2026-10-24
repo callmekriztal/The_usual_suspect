@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DEAD PIXELS</title>
+    <link rel="stylesheet" href="/src/styles/theme.css" />
+    <link rel="stylesheet" href="/src/styles/windows.css" />
+    <link rel="stylesheet" href="/src/styles/skin-case.css" />
+    <link rel="stylesheet" href="/src/styles/skin-truth.css" />
+  </head>
+  <body data-truth="0">
+    <div id="app" class="desktop-environment">
+      <!-- Boot overlay / Screen container -->
+      <div id="boot-screen" class="boot-screen" aria-live="polite"></div>
+
+      <!-- Main Desktop Workspace -->
+      <main id="desktop" class="desktop" role="main">
+        <div id="desktop-icons" class="desktop-icons"></div>
+        <div id="window-container" class="window-container"></div>
+        
+        <!-- Evidence Board SVG Container (Scaffold) -->
+        <div id="board-container" class="board-container" style="display: none;">
+          <svg id="board-svg" class="board-svg" width="100%" height="100%"></svg>
+        </div>
+
+        <!-- Canvas 2D Effects Layer (Scaffold: scope & dissolve only) -->
+        <canvas id="fx-canvas" class="fx-canvas" width="1280" height="720" aria-hidden="true"></canvas>
+      </main>
+
+      <!-- Taskbar Tray -->
+      <footer id="taskbar" class="taskbar" role="contentinfo">
+        <div class="taskbar-left">
+          <span class="system-ident" data-tok="DEV-7F3A">ADI-THINKPAD · DEV-7F3A</span>
+        </div>
+        <div class="taskbar-center" id="taskbar-tasks"></div>
+        <div class="taskbar-right">
+          <button id="audio-mute-toggle" class="tray-btn" aria-label="Toggle Sound">MUTED</button>
+          <span class="tray-item no-net" title="network: none">NO-NET</span>
+          <span class="tray-item battery" title="battery 23%">BAT 23%</span>
+          <time id="tray-clock" class="tray-item clock">23:52</time>
+        </div>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

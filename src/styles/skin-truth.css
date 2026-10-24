@@ -1,0 +1,14 @@
+/* Skin swap styles after the flip (truth 3) */
+
+body[data-truth="3"] .case-stamp {
+  display: none;
+}
+
+body[data-truth="3"] .window {
+  border: 1px solid #777;
+  box-shadow: none;
+}
+
+body[data-truth="3"] {
+  --desk: #2b302e;
+}
