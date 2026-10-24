@@ -6,6 +6,7 @@ import { TokenRegistry } from './engine/tokens';
 import { GameStateMachine } from './engine/state';
 import { TerminalApp } from './ui/apps/terminal';
 import { MessagesApp } from './ui/apps/messages';
+import { AudioPlayerApp } from './ui/apps/player';
 import { WindowManager } from './ui/windowManager';
 import { Taskbar } from './ui/taskbar';
 import { TokenFlashManager } from './ui/fx/flash';
@@ -20,6 +21,7 @@ export interface AppContext {
   tokenFlash?: TokenFlashManager;
   terminal?: TerminalApp;
   messages?: MessagesApp;
+  player?: AudioPlayerApp;
 }
 
 export function initializeShell(): AppContext {
@@ -114,6 +116,25 @@ export function initializeShell(): AppContext {
         element: messages.getWindowElement(),
         initialX: 560,
         initialY: 50,
+      });
+    }
+
+    const player = new AudioPlayerApp({
+      container: windowContainer,
+      stateMachine,
+      tokens,
+      isMuted: () => taskbar?.getIsMuted() ?? true,
+    });
+    player.mount();
+    context.player = player;
+
+    if (windowManager) {
+      windowManager.registerWindow({
+        id: 'player',
+        title: 'AUDIO PLAYER: rec_0912_2236.wav',
+        element: player.getWindowElement(),
+        initialX: 160,
+        initialY: 120,
       });
     }
   }

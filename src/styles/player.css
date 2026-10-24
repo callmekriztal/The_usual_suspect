@@ -1,0 +1,279 @@
+/* DEAD PIXELS - Audio Player Application & Oscilloscope Styles */
+
+.player-window {
+  width: 520px;
+  height: 470px;
+  top: 120px;
+  left: 160px;
+  background: var(--paper);
+  border: 1px solid #75756d;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.player-body {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  gap: 8px;
+  overflow: hidden;
+  background: #eceae0;
+  color: #1a1a1a;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Oscilloscope Display */
+.oscilloscope-container {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  background: #101512;
+  border: 2px solid #1b261d;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.oscilloscope-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.oscilloscope-overlay {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  right: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.scope-label {
+  color: #557b64;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.scope-lock-status {
+  color: #68726b;
+  font-weight: bold;
+  padding: 1px 5px;
+  background: rgba(16, 21, 18, 0.8);
+  border: 1px solid #203326;
+  letter-spacing: 0.5px;
+}
+
+.scope-lock-status.tuning {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.scope-lock-status.locked {
+  color: #4af626;
+  border-color: #2e6b3c;
+}
+
+/* Tuner Controls */
+.tuner-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #dedcd2;
+  border: 1px solid #b5b5ab;
+  padding: 6px 8px;
+}
+
+.tuner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.tuner-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.dial-readout {
+  font-weight: bold;
+  background: #2a2f33;
+  color: var(--amber);
+  padding: 1px 6px;
+  border: 1px solid #1c221f;
+  font-size: 12px;
+}
+
+.dial-slider-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tuning-dial {
+  width: 100%;
+  height: 18px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+.tuning-dial:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
+.tuning-dial::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #2a2f33;
+  border: 1px solid #1c221f;
+}
+
+.tuning-dial::-moz-range-track {
+  height: 6px;
+  background: #2a2f33;
+  border: 1px solid #1c221f;
+}
+
+.tuning-dial::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 18px;
+  background: var(--amber);
+  border: 1px solid #000;
+  cursor: grab;
+  margin-top: -6px;
+}
+
+.tuning-dial::-moz-range-thumb {
+  width: 14px;
+  height: 18px;
+  background: var(--amber);
+  border: 1px solid #000;
+  cursor: grab;
+}
+
+.dial-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #68726b;
+  padding: 0 2px;
+}
+
+/* Lock Meter */
+.lock-meter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.meter-label {
+  font-size: 10px;
+  color: #555e58;
+}
+
+.meter-bar-bg {
+  flex: 1;
+  height: 8px;
+  background: #2a2f33;
+  border: 1px solid #1c221f;
+  overflow: hidden;
+}
+
+.meter-bar-fill {
+  height: 100%;
+  background: var(--amber);
+  transition: width 0.05s linear;
+}
+
+/* Transcript Panel */
+.transcript-panel {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f7f6f0;
+  border: 1px solid #c4c4bb;
+  padding: 6px;
+}
+
+.transcript-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: bold;
+  color: #4a544e;
+  border-bottom: 1px solid #dedcd2;
+  padding-bottom: 4px;
+}
+
+.transcript-hint {
+  font-weight: normal;
+  color: #7b887f;
+  font-style: italic;
+}
+
+.fragments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fragment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px 8px;
+  background: #deded6;
+  border: 1px solid #b5b5ab;
+  border-left: 3px solid #8e8e84;
+}
+
+.fragment-card.locked {
+  background: #fdfaf2;
+  border-color: #c99c43;
+  border-left: 3px solid var(--amber);
+}
+
+.fragment-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #68726b;
+}
+
+.fragment-tag {
+  font-weight: bold;
+}
+
+.fragment-card.locked .fragment-status {
+  color: #7b5917;
+  font-weight: bold;
+}
+
+.fragment-text {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #1a1a1a;
+  word-break: break-word;
+  font-family: var(--font-mono);
+}
+
+.fragment-card.locked .fragment-text {
+  color: #101312;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter-bar-fill {
+    transition: none !important;
+  }
+}
