@@ -5,6 +5,7 @@ import { CommandExecutor } from './engine/commands';
 import { TokenRegistry } from './engine/tokens';
 import { GameStateMachine } from './engine/state';
 import { TerminalApp } from './ui/apps/terminal';
+import { MessagesApp } from './ui/apps/messages';
 import { WindowManager } from './ui/windowManager';
 import { Taskbar } from './ui/taskbar';
 import { TokenFlashManager } from './ui/fx/flash';
@@ -18,6 +19,7 @@ export interface AppContext {
   taskbar?: Taskbar;
   tokenFlash?: TokenFlashManager;
   terminal?: TerminalApp;
+  messages?: MessagesApp;
 }
 
 export function initializeShell(): AppContext {
@@ -94,6 +96,24 @@ export function initializeShell(): AppContext {
         initialX: 60,
         initialY: 40,
         onFocus: () => terminal.focus(),
+      });
+    }
+
+    const messages = new MessagesApp({
+      container: windowContainer,
+      stateMachine,
+      tokens,
+    });
+    messages.mount();
+    context.messages = messages;
+
+    if (windowManager) {
+      windowManager.registerWindow({
+        id: 'messages',
+        title: 'INTERCEPTED MESSAGES',
+        element: messages.getWindowElement(),
+        initialX: 560,
+        initialY: 50,
       });
     }
   }
