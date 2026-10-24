@@ -47,10 +47,100 @@ export function applySkinSwap(): void {
   });
 }
 
-export function initializeShell(): AppContext {
+export function applyUrlShortcuts(
+  _vfs: VirtualFileSystem,
+  stateMachine: GameStateMachine,
+  search: string
+): void {
+  if (!search) return;
+  const query = search.startsWith('?') ? search.slice(1) : search;
+  const params = new URLSearchParams(query);
+
+  // 1. ?reset - clears local storage keys
+  if (params.has('reset')) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem('dead_pixels_session_v1');
+        window.localStorage.removeItem('dead_pixels_session_v1_stage');
+        window.localStorage.removeItem('dead_pixels_game_state_v4');
+      }
+    } catch {}
+  }
+
+  // 2. ?solve=log,timeline or audio
+  const solveParam = params.get('solve');
+  if (solveParam) {
+    const strands = solveParam.split(',').map((s) => s.trim().toLowerCase());
+    for (const strand of strands) {
+      if (strand === 'log') {
+        stateMachine.pin('log:rule_created_0908');
+        stateMachine.pin('log:deactivated_kiran');
+      } else if (strand === 'timeline') {
+        stateMachine.pin('src:kiran_airport_2210');
+        stateMachine.pin('msg:4471_2240');
+      } else if (strand === 'audio') {
+        stateMachine.pin('aud:frag_1');
+        stateMachine.pin('aud:frag_2');
+        stateMachine.pin('aud:frag_3');
+      }
+    }
+  }
+
+  // 3. ?truth=2 or ?truth=3
+  const truthParam = params.get('truth');
+  if (truthParam === '2') {
+    stateMachine.pin('log:rule_created_0908');
+    stateMachine.pin('log:deactivated_kiran');
+    stateMachine.pin('src:kiran_airport_2210');
+    stateMachine.pin('msg:4471_2240');
+    stateMachine.pin('aud:frag_2');
+    stateMachine.openPhotos();
+    stateMachine.pin('photo:img_0912_2236');
+    stateMachine.connect('photo:img_0912_2236', 'aud:frag_2');
+    stateMachine.connect('log:rule_created_0908', 'photo:img_0912_2236');
+    stateMachine.connect('msg:4471_2240', 'src:kiran_airport_2210');
+  } else if (truthParam === '3') {
+    stateMachine.pin('log:rule_created_0908');
+    stateMachine.pin('log:deactivated_kiran');
+    stateMachine.pin('src:kiran_airport_2210');
+    stateMachine.pin('msg:4471_2240');
+    stateMachine.pin('aud:frag_1');
+    stateMachine.pin('aud:frag_2');
+    stateMachine.pin('aud:frag_3');
+    stateMachine.openPhotos();
+    stateMachine.pin('photo:img_0912_2236');
+    stateMachine.connect('photo:img_0912_2236', 'aud:frag_2');
+    stateMachine.connect('log:rule_created_0908', 'photo:img_0912_2236');
+    stateMachine.connect('msg:4471_2240', 'src:kiran_airport_2210');
+    stateMachine.setOwner('Adi');
+    stateMachine.startReveal();
+    stateMachine.recoverPersistedFlip(Date.now() - 7001);
+  }
+}
+
+export function initializeShell(initialSearch?: string): AppContext {
+  const search =
+    initialSearch ?? (typeof window !== 'undefined' ? window.location?.search || '' : '');
+
+  // Pre-reset storage before loading startup session if ?reset is present
+  if (search.includes('reset')) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem('dead_pixels_session_v1');
+        window.localStorage.removeItem('dead_pixels_session_v1_stage');
+        window.localStorage.removeItem('dead_pixels_game_state_v4');
+      }
+    } catch {}
+  }
+
   const vfs = new VirtualFileSystem();
   const stateMachine = new GameStateMachine(vfs);
   loadSessionStartup(vfs, stateMachine);
+
+  // Apply shortcuts if provided in URL
+  if (search) {
+    applyUrlShortcuts(vfs, stateMachine, search);
+  }
   const executor = new CommandExecutor(vfs);
   const tokens = new TokenRegistry();
 
@@ -253,7 +343,7 @@ export function initializeShell(): AppContext {
   if (typeof window !== 'undefined') {
     (window as unknown as { __DEAD_PIXELS__?: AppContext }).__DEAD_PIXELS__ = context;
 
-    if (window.location.search.includes('test=terminal') && context.terminal) {
+    if (window.location?.search?.includes('test=terminal') && context.terminal) {
       if (bootScreen) bootScreen.style.display = 'none';
       context.terminal.submitCommand('grep -v "sync ok" logs/access.log');
       context.terminal.submitCommand('pin log:rule_created_0908');
