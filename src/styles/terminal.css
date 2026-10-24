@@ -18,6 +18,18 @@
   color: #cfd8c7;
 }
 
+.terminal-window.active .window-titlebar {
+  background: #232b27;
+  border-bottom: 1px solid #434e47;
+  color: #e2ecd9;
+}
+
+.terminal-window.inactive .window-titlebar {
+  background: #141716;
+  border-bottom: 1px solid #232825;
+  color: #6a7469;
+}
+
 .terminal-body {
   background: var(--term-bg);
   color: var(--term-fg);

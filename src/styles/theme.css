@@ -50,6 +50,31 @@ html, body {
   background-color: var(--desk);
 }
 
+.desktop-badge {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #7b887f;
+  border: 1px solid #5a665e;
+  padding: 3px 7px;
+  background: rgba(16, 19, 18, 0.45);
+  letter-spacing: 0.5px;
+  user-select: none;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.desktop-badge:hover {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.desktop-badge:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
 .fx-canvas {
   position: absolute;
   top: 0;

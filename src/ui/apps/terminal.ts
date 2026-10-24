@@ -100,6 +100,7 @@ export class TerminalApp {
   private renderInitialBanner(): void {
     const banner = [
       'DEAD PIXELS TERMINAL v1.4 (x86_64-thinkpad-linux-gnu)',
+      'Session: ADI-THINKPAD · Device: DEV-7F3A',
       'Type \'help\' for available commands.',
       'Start with the access log: \'grep -v "sync ok" logs/access.log\'',
       '',

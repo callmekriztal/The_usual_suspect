@@ -9,6 +9,25 @@
   pointer-events: none;
 }
 
+@keyframes window-appear {
+  0% {
+    transform: scale(0.97) translateY(4px);
+    opacity: 0.2;
+  }
+  33% {
+    transform: scale(0.98) translateY(2px);
+    opacity: 0.6;
+  }
+  66% {
+    transform: scale(0.99) translateY(1px);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
 .window {
   position: absolute;
   pointer-events: auto;
@@ -20,6 +39,15 @@
   min-width: 240px;
   min-height: 160px;
   font-family: var(--font-mono);
+  animation: window-appear 80ms steps(4);
+}
+
+.window.minimized {
+  display: none !important;
+}
+
+.window.dragging {
+  user-select: none;
 }
 
 .window-titlebar {
@@ -32,6 +60,16 @@
   padding: 0 4px 0 6px;
   cursor: grab;
   font-size: 11px;
+}
+
+.window.active .window-titlebar {
+  background: var(--title);
+  color: #ffffff;
+}
+
+.window.inactive .window-titlebar {
+  background: #4a544e;
+  color: #a4afa6;
 }
 
 .window-title {
@@ -58,9 +96,94 @@
   color: #000;
 }
 
+.window-btn:hover {
+  background: #deded6;
+}
+
+.window-btn:active {
+  background: #99998e;
+}
+
 .window-body {
   flex: 1;
   overflow: auto;
   padding: 8px;
   background: var(--paper);
+}
+
+/* Taskbar task buttons */
+.taskbar-center {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  margin: 0 10px;
+  overflow-x: auto;
+}
+
+.taskbar-task-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  height: 22px;
+  padding: 0 8px;
+  background: #b5b5ab;
+  border: 1px solid #8e8e84;
+  color: var(--title);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: inset 1px 1px 0 #deded6, inset -1px -1px 0 #7b7b72;
+}
+
+.taskbar-task-btn:hover {
+  background: #c5c5bb;
+}
+
+.taskbar-task-btn.active {
+  background: #e2e2d9;
+  border-color: #555;
+  box-shadow: inset 1px 1px 0 #7b7b72, inset -1px -1px 0 #deded6;
+  font-weight: bold;
+}
+
+.taskbar-task-btn.minimized {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.taskbar-task-btn:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
+/* Global Token Linking & Flash Effect */
+[data-tok] {
+  cursor: pointer;
+}
+
+[data-tok]:hover {
+  outline: 1px dotted var(--amber);
+}
+
+[data-tok]:focus-visible {
+  outline: 2px solid var(--amber);
+}
+
+.token-flash {
+  background-color: var(--amber) !important;
+  color: #101312 !important;
+  outline: 2px solid var(--amber) !important;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window {
+    animation: none !important;
+  }
+  .token-flash {
+    transition: none !important;
+  }
 }
