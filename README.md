@@ -22,3 +22,4 @@ A single-page browser mystery game. You sit at a laptop with a case file: `CASE_
 - `npm test` - Run Vitest test suite
 - `npm run typecheck` - Run TypeScript compiler checks
 # The_usual_suspect
+# The_usual_suspect
