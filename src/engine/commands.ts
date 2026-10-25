@@ -23,6 +23,180 @@ export interface PinnableEvidence {
   real?: string;
 }
 
+export interface EvidenceMetaEntry {
+  id: string;
+  source: 'log' | 'msg' | 'src' | 'aud' | 'photo';
+  title: string;
+  snippet: string;
+  aliases: string[];
+}
+
+export const STABLE_EVIDENCE_LIST: EvidenceMetaEntry[] = [
+  // Log Anomalies
+  {
+    id: 'log:rule_created_0908',
+    source: 'log',
+    title: 'Forwarding Rule',
+    snippet: '09-08 02:14:09 rule_created acct=nila type=forward dev=DEV-7F3A',
+    aliases: ['rule_created', 'forward', 'forward_rule', 'rule_created_0908'],
+  },
+  {
+    id: 'log:login_0908',
+    source: 'log',
+    title: 'Saved Password Login',
+    snippet: '09-08 02:14:51 login acct=nila dev=DEV-7F3A method=saved_password',
+    aliases: ['login_0908', 'login_dev7f3a'],
+  },
+  {
+    id: 'log:login_19c2_0912',
+    source: 'log',
+    title: 'Kiran Lab Login',
+    snippet: '09-12 21:12:30 login acct=nila dev=DEV-19C2 app=photos_shared',
+    aliases: ['19c2', 'login_19c2', 'login_19c2_0912'],
+  },
+  {
+    id: 'log:deactivated_kiran',
+    source: 'log',
+    title: 'Account Deactivated',
+    snippet: '09-12 21:14:02 acct_deactivated user=kiran.s source=college_portal',
+    aliases: ['kiran', 'deactivated', 'deactivated_kiran'],
+  },
+  {
+    id: 'log:phone_changed_0914',
+    source: 'log',
+    title: 'Phone Changed',
+    snippet: '09-14 02:50:33 phone_changed acct=nila note=old number removed',
+    aliases: ['phone_changed', 'phone_changed_0914'],
+  },
+  {
+    id: 'log:sync_final_1022',
+    source: 'log',
+    title: 'Final Sync',
+    snippet: '10-22 23:41:07 sync final acct=nila dev=DEV-7F3A new=2',
+    aliases: ['sync_final', 'sync_final_1022'],
+  },
+
+  // Timeline Markers
+  {
+    id: 'src:dev19c2_2112',
+    source: 'src',
+    title: 'DEV-19C2 Photo Login',
+    snippet: '21:12 login DEV-19C2 (Kiran old lab laptop)',
+    aliases: ['marker_19c2', 'dev19c2_2112'],
+  },
+  {
+    id: 'src:kiran_deact_2114',
+    source: 'src',
+    title: 'Portal Deactivation',
+    snippet: '21:14 kiran.s account deactivated',
+    aliases: ['marker_deact', 'kiran_deact_2114'],
+  },
+  {
+    id: 'src:kiran_airport_2210',
+    source: 'src',
+    title: 'Airport Post (Bengaluru)',
+    snippet: '22:10 KIRAN: posted from airport, Bengaluru',
+    aliases: ['airport', 'bengaluru', 'kiran_airport'],
+  },
+
+  // Night Messages
+  {
+    id: 'msg:4471_2240',
+    source: 'msg',
+    title: 'SMS "im downstairs"',
+    snippet: '22:40 4471: im downstairs',
+    aliases: ['downstairs', '4471_2240', 'msg_2240'],
+  },
+  {
+    id: 'msg:4471_2241',
+    source: 'msg',
+    title: 'SMS "come down"',
+    snippet: '22:41 4471: come down. just 5 min',
+    aliases: ['4471_2241', 'msg_2241'],
+  },
+  {
+    id: 'msg:4471_2252',
+    source: 'msg',
+    title: 'SMS "ill wait"',
+    snippet: '22:52 4471: ok. ill wait',
+    aliases: ['4471_2252', 'msg_2252'],
+  },
+  {
+    id: 'msg:4471_2330',
+    source: 'msg',
+    title: 'SMS "still here"',
+    snippet: '23:30 4471: still here',
+    aliases: ['4471_2330', 'msg_2330'],
+  },
+
+  // Tuned Audio Fragments
+  {
+    id: 'aud:frag_1',
+    source: 'aud',
+    title: 'Audio Memo [Frag 1]',
+    snippet: '18 MHz: Phone light outside hostel window',
+    aliases: ['frag_1', 'frag1', '18mhz'],
+  },
+  {
+    id: 'aud:frag_2',
+    source: 'aud',
+    title: 'Audio Memo [Frag 2]',
+    snippet: '52 MHz: 12 Sep 22:36 recorded for warden',
+    aliases: ['frag_2', 'frag2', '52mhz'],
+  },
+  {
+    id: 'aud:frag_3',
+    source: 'aud',
+    title: 'Audio Memo [Frag 3]',
+    snippet: '81 MHz: "I know who it is"',
+    aliases: ['frag_3', 'frag3', '81mhz'],
+  },
+
+  // Surveillance Photos
+  {
+    id: 'photo:img_0911_1752',
+    source: 'photo',
+    title: 'IMG_0911_1752.jpg',
+    snippet: '11 Sep 17:52 Third-floor window (daylight)',
+    aliases: ['photo_1752', 'img_0911_1752'],
+  },
+  {
+    id: 'photo:img_0911_2214',
+    source: 'photo',
+    title: 'IMG_0911_2214.jpg',
+    snippet: '11 Sep 22:14 Window dark',
+    aliases: ['photo_2214', 'img_0911_2214'],
+  },
+  {
+    id: 'photo:img_0912_1805',
+    source: 'photo',
+    title: 'IMG_0912_1805.jpg',
+    snippet: '12 Sep 18:05 Curtains drawn',
+    aliases: ['photo_1805', 'img_0912_1805'],
+  },
+  {
+    id: 'photo:img_0912_2236',
+    source: 'photo',
+    title: 'IMG_0912_2236.jpg',
+    snippet: '12 Sep 22:36 Light on (DEV-7F3A SIM2 ...4471)',
+    aliases: ['photo_window', 'photo_2236', 'img_0912_2236'],
+  },
+  {
+    id: 'photo:img_0912_2250',
+    source: 'photo',
+    title: 'IMG_0912_2250.jpg',
+    snippet: '12 Sep 22:50 Ground floor exit',
+    aliases: ['photo_2250', 'img_0912_2250'],
+  },
+  {
+    id: 'photo:img_0912_2330',
+    source: 'photo',
+    title: 'IMG_0912_2330.jpg',
+    snippet: '12 Sep 23:30 Block C gate closed',
+    aliases: ['photo_2330', 'img_0912_2330'],
+  },
+];
+
 export class CommandExecutor {
   private vfs: VirtualFileSystem;
   private pinnedIds: Set<string> = new Set();
@@ -423,16 +597,66 @@ Available commands:
     return { stdout: parts.join('\t'), stderr: '', exitCode: 0 };
   }
 
-  private handlePin(args: string[]): CommandResult {
-    if (args.length === 0) {
-      return { stdout: '', stderr: 'usage: pin <evidence-id>', exitCode: 1 };
+  public resolveEvidenceId(input: string): string | null {
+    const raw = input.trim();
+    if (!raw) return null;
+
+    // 1. Direct match with registered evidence ID
+    if (this.evidenceRegistry.has(raw)) {
+      return raw;
     }
 
-    const id = args[0].trim();
-    if (!this.evidenceRegistry.has(id)) {
+    // 2. Numeric index selection e.g. "1", "#1"
+    const numMatch = raw.match(/^#?(\d+)$/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1], 10);
+      if (idx >= 1 && idx <= STABLE_EVIDENCE_LIST.length) {
+        return STABLE_EVIDENCE_LIST[idx - 1].id;
+      }
+    }
+
+    // 3. Unambiguous alias match (case-insensitive)
+    const norm = raw.toLowerCase().replace(/[-_]/g, '');
+    const matches: string[] = [];
+    for (const item of STABLE_EVIDENCE_LIST) {
+      for (const alias of item.aliases) {
+        const normAlias = alias.toLowerCase().replace(/[-_]/g, '');
+        if (norm === normAlias) {
+          matches.push(item.id);
+          break;
+        }
+      }
+    }
+
+    if (matches.length === 1) {
+      return matches[0];
+    }
+
+    return null;
+  }
+
+  private handlePin(args: string[]): CommandResult {
+    if (args.length === 0) {
+      const lines = [
+        'Available evidence for pinning:',
+        ...STABLE_EVIDENCE_LIST.map((item, idx) => {
+          const num = `[${idx + 1}]`.padStart(4, ' ');
+          const aliasStr = item.aliases.length > 0 ? ` (aliases: ${item.aliases.join(', ')})` : '';
+          return `  ${num} ${item.id.padEnd(24, ' ')} - ${item.snippet}${aliasStr}`;
+        }),
+        '',
+        'usage: pin <evidence-id | alias | #number>',
+      ];
+      return { stdout: lines.join('\n'), stderr: '', exitCode: 0 };
+    }
+
+    const raw = args[0].trim();
+    const id = this.resolveEvidenceId(raw);
+
+    if (!id || !this.evidenceRegistry.has(id)) {
       return {
         stdout: '',
-        stderr: `pin: unknown evidence ID '${id}'`,
+        stderr: `pin: unknown evidence ID '${raw}'`,
         exitCode: 1,
       };
     }

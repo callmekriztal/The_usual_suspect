@@ -10,7 +10,7 @@ import {
   makeConnectionKey,
   FatalPanicError,
 } from '../src/engine';
-import { EvidenceBoardApp } from '../src/ui/apps/board';
+import { EvidenceBoardApp, BOARD_CARDS_STORAGE_KEY } from '../src/ui/apps/board';
 
 const mockStore = new Map<string, string>();
 const mockLocalStorage = {
@@ -25,6 +25,21 @@ const mockLocalStorage = {
     mockStore.clear();
   }),
 };
+
+const winListeners: Record<string, Function[]> = {};
+function mockWindowAddEventListener(evt: string, fn: Function) {
+  winListeners[evt] = winListeners[evt] || [];
+  winListeners[evt].push(fn);
+}
+function mockWindowRemoveEventListener(evt: string, fn: Function) {
+  if (winListeners[evt]) {
+    winListeners[evt] = winListeners[evt].filter((f) => f !== fn);
+  }
+}
+function mockWindowSimulateEvent(evt: string, data: any) {
+  const list = winListeners[evt] || [];
+  for (const h of list) h(data);
+}
 
 function createMockElement(tagName: string, initialAttrs: Record<string, string> = {}): any {
   const listeners: Record<string, Function[]> = {};
@@ -196,7 +211,13 @@ if (typeof (globalThis as any).document === 'undefined') {
   (globalThis as any).document = mockDoc;
 }
 if (typeof (globalThis as any).window === 'undefined') {
-  (globalThis as any).window = { localStorage: mockLocalStorage, dispatchEvent: vi.fn() };
+  (globalThis as any).window = {
+    localStorage: mockLocalStorage,
+    dispatchEvent: vi.fn(),
+    addEventListener: mockWindowAddEventListener,
+    removeEventListener: mockWindowRemoveEventListener,
+    _simulateWinEvent: mockWindowSimulateEvent,
+  };
 } else {
   if (!(globalThis as any).window.localStorage) {
     (globalThis as any).window.localStorage = mockLocalStorage;
@@ -204,6 +225,9 @@ if (typeof (globalThis as any).window === 'undefined') {
   if (!(globalThis as any).window.dispatchEvent) {
     (globalThis as any).window.dispatchEvent = vi.fn();
   }
+  (globalThis as any).window.addEventListener = mockWindowAddEventListener;
+  (globalThis as any).window.removeEventListener = mockWindowRemoveEventListener;
+  (globalThis as any).window._simulateWinEvent = mockWindowSimulateEvent;
 }
 if (typeof (globalThis as any).requestAnimationFrame === 'undefined') {
   (globalThis as any).requestAnimationFrame = (fn: Function) => setTimeout(fn, 0);
@@ -801,6 +825,95 @@ describe('Stage 9 Evidence Board, Reveal & Dual-Ending Transactions', () => {
       expect(game.isOwnerSolved()).toBe(true);
       expect(game.getRevealPhase()).toBe('flipping');
       expect(container.textContent).toContain('DEV-7F3A: ADI (SOLVED)');
+    });
+
+    it('37. empty board with zero pins renders empty state message and zero pin cards', () => {
+      // With zero pins in game state
+      expect(game.getPins().size).toBe(0);
+      const emptyEl = container.querySelector('.board-empty-state');
+      expect(emptyEl).not.toBeNull();
+      expect(emptyEl.textContent).toContain('EVIDENCE BOARD IS EMPTY');
+      const cards = container.querySelectorAll('.pin-card');
+      expect(cards.length).toBe(0);
+    });
+
+    it('38. pinning one clue renders only that card and removes the empty state', () => {
+      game.pin('src:kiran_airport_2210');
+      const emptyEl = container.querySelector('.board-empty-state');
+      expect(emptyEl).toBeNull();
+
+      const cards = container.querySelectorAll('.pin-card');
+      expect(cards.length).toBe(1);
+      expect(cards[0].getAttribute('data-pin-id')).toBe('src:kiran_airport_2210');
+      expect(cards[0].textContent).toContain('Airport Post');
+    });
+
+    it('39. clicking an existing connection removes it and updates yarn overlay', () => {
+      game.pin('photo:img_0912_2236');
+      game.pin('aud:frag_2');
+
+      const photoCard = container.querySelector('[data-pin-id="photo:img_0912_2236"]');
+      const audioCard = container.querySelector('[data-pin-id="aud:frag_2"]');
+
+      // First click pair -> connect
+      photoCard.click();
+      audioCard.click();
+      const key = makeConnectionKey('aud:frag_2', 'photo:img_0912_2236');
+      expect(game.getConnections().has(key)).toBe(true);
+
+      const svgBefore = container.querySelector('.board-svg-overlay');
+      expect(svgBefore.children.length).toBe(1);
+
+      // Second click pair -> disconnect
+      photoCard.click();
+      audioCard.click();
+      expect(game.getConnections().has(key)).toBe(false);
+
+      const statusEl = container.querySelector('.board-status');
+      expect(statusEl.textContent).toContain('REMOVED STRAND');
+
+      const svgAfter = container.querySelector('.board-svg-overlay');
+      expect(svgAfter.children.length).toBe(0);
+    });
+
+    it('40. card dragging updates position and saves coordinates to localStorage without selecting', () => {
+      game.pin('photo:img_0912_2236');
+      const photoCard = container.querySelector('[data-pin-id="photo:img_0912_2236"]');
+      expect(photoCard).not.toBeNull();
+
+      // Start drag
+      photoCard.dispatchEvent({
+        type: 'pointerdown',
+        clientX: 100,
+        clientY: 100,
+        button: 0,
+      });
+
+      // Move beyond 4px threshold
+      (globalThis as any).window._simulateWinEvent('pointermove', {
+        clientX: 180,
+        clientY: 160,
+      });
+
+      // Release
+      (globalThis as any).window._simulateWinEvent('pointerup', {});
+
+      // Verify position saved to localStorage
+      const saved = mockStore.get(BOARD_CARDS_STORAGE_KEY);
+      expect(saved).toBeDefined();
+      expect(saved).toContain('photo:img_0912_2236');
+
+      // Verify that dragging did NOT select the card
+      const statusEl = container.querySelector('.board-status');
+      expect(statusEl.textContent).not.toContain('SELECTED');
+    });
+
+    it('41. game.reset() clears persisted board cards storage', () => {
+      mockStore.set(BOARD_CARDS_STORAGE_KEY, JSON.stringify({ 'photo:img_0912_2236': { x: 100, y: 100 } }));
+      expect(mockStore.has(BOARD_CARDS_STORAGE_KEY)).toBe(true);
+
+      game.reset();
+      expect(mockStore.has(BOARD_CARDS_STORAGE_KEY)).toBe(false);
     });
   });
 });

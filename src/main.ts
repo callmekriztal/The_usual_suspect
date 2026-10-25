@@ -64,6 +64,7 @@ export function applyUrlShortcuts(
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
         window.localStorage.removeItem('dead_pixels_game_state_v4');
         window.localStorage.removeItem('dead_pixels_windows_v1');
+        window.localStorage.removeItem('dead_pixels_board_cards_v1');
       }
     } catch {}
   }
@@ -131,6 +132,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
         window.localStorage.removeItem('dead_pixels_game_state_v4');
         window.localStorage.removeItem('dead_pixels_windows_v1');
+        window.localStorage.removeItem('dead_pixels_board_cards_v1');
       }
     } catch {}
   }

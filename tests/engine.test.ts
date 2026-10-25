@@ -6,6 +6,8 @@ import {
   VirtualFileSystem,
   TokenRegistry,
   CommandExecutor,
+  GameStateMachine,
+  makeConnectionKey,
 } from '../src/engine';
 
 describe('Stage 2 Engine Core: VFS, Commands & Token Registry', () => {
@@ -214,10 +216,65 @@ describe('Stage 2 Engine Core: VFS, Commands & Token Registry', () => {
       expect(res.stderr).toContain("unknown evidence ID 'invalid_evidence_xyz'");
     });
 
-    it('provides usage message when pin has no arguments', () => {
+    it('provides usage and available evidence listing when pin has no arguments', () => {
       const res = executor.execute('pin');
-      expect(res.exitCode).toBe(1);
-      expect(res.stderr).toBe('usage: pin <evidence-id>');
+      expect(res.exitCode).toBe(0);
+      expect(res.stdout).toContain('Available evidence for pinning:');
+      expect(res.stdout).toContain('log:rule_created_0908');
+      expect(res.stdout).toContain('usage: pin <evidence-id | alias | #number>');
+    });
+
+    it('supports pinning by alias and index number', () => {
+      // Alias 'forward' -> log:rule_created_0908
+      const res1 = executor.execute('pin forward');
+      expect(res1.exitCode).toBe(0);
+      expect(res1.stdout).toBe('pinned.');
+      expect(res1.newPinnedId).toBe('log:rule_created_0908');
+
+      // Duplicate alias -> already pinned
+      const resDup = executor.execute('pin rule_created');
+      expect(resDup.stdout).toBe('already pinned.');
+
+      // Alias 'kiran' -> log:deactivated_kiran
+      const res2 = executor.execute('pin kiran');
+      expect(res2.exitCode).toBe(0);
+      expect(res2.stdout).toBe('pinned.');
+      expect(res2.newPinnedId).toBe('log:deactivated_kiran');
+
+      // Number index '3' -> log:login_19c2_0912
+      const res3 = executor.execute('pin 3');
+      expect(res3.exitCode).toBe(0);
+      expect(res3.stdout).toBe('pinned.');
+      expect(res3.newPinnedId).toBe('log:login_19c2_0912');
+    });
+
+    it('supports disconnecting and toggling evidence connections', () => {
+      const game = new GameStateMachine(vfs);
+      game.pin('aud:frag_2');
+      game.pin('photo:img_0912_2236');
+
+      // Connect
+      const connRes = game.connect('aud:frag_2', 'photo:img_0912_2236');
+      expect(connRes.success).toBe(true);
+      expect(game.hasRequiredConnections()).toBe(false);
+
+      // Disconnect
+      const disconnRes = game.disconnect('aud:frag_2', 'photo:img_0912_2236');
+      expect(disconnRes.success).toBe(true);
+      const key = makeConnectionKey('aud:frag_2', 'photo:img_0912_2236');
+      expect(game.getConnections().has(key)).toBe(false);
+
+      // Toggle back on
+      const toggleOn = game.toggleConnection('aud:frag_2', 'photo:img_0912_2236');
+      expect(toggleOn.success).toBe(true);
+      expect(toggleOn.connected).toBe(true);
+      expect(game.getConnections().has(key)).toBe(true);
+
+      // Toggle back off
+      const toggleOff = game.toggleConnection('aud:frag_2', 'photo:img_0912_2236');
+      expect(toggleOff.success).toBe(true);
+      expect(toggleOff.connected).toBe(false);
+      expect(game.getConnections().has(key)).toBe(false);
     });
   });
 

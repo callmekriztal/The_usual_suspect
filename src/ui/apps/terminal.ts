@@ -6,6 +6,7 @@ import { CommandExecutor, CommandResult } from '../../engine/commands';
 import { TokenRegistry } from '../../engine/tokens';
 import { GameStateMachine } from '../../engine/state';
 import { AudioSynthesizer } from '../../audio/synth';
+import { ANOMALIES, FINAL_SYNC } from '../../content/log';
 
 export interface TerminalAppOptions {
   container: HTMLElement;
@@ -115,9 +116,13 @@ export class TerminalApp {
   private attachEventListeners(): void {
     // Focus input on click anywhere in body
     this.bodyElement.addEventListener('click', (e) => {
-      // Don't steal focus if clicking an interactive token
+      // Don't steal focus if clicking an interactive token or pin button
       const target = e.target as HTMLElement;
-      if (target && target.classList.contains('terminal-token')) {
+      if (
+        target &&
+        (target.classList.contains('terminal-token') ||
+          target.classList.contains('terminal-pin-btn'))
+      ) {
         return;
       }
       this.focus();
@@ -226,11 +231,54 @@ export class TerminalApp {
     if (styleClass === 'normal') {
       // Highlight interactive tokens
       lineEl.innerHTML = this.enrichTokens(text);
+
+      // Check if this line is an anomaly or final sync evidence line
+      const matchAnomaly = [...ANOMALIES, FINAL_SYNC].find(
+        (a) => a.id && text.includes(a.timestamp)
+      );
+
+      if (matchAnomaly && matchAnomaly.id) {
+        const id = matchAnomaly.id;
+        const isPinned = this.stateMachine.getPins().has(id);
+        const pinBtn = document.createElement('button');
+        pinBtn.className = `terminal-pin-btn ${isPinned ? 'pinned' : ''}`;
+        pinBtn.setAttribute('data-pin-id', id);
+        pinBtn.setAttribute('aria-label', `Pin ${id} to Evidence Board`);
+        pinBtn.textContent = isPinned ? '[PINNED]' : '[PIN]';
+        pinBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          this.pinEvidence(id);
+        });
+        lineEl.appendChild(pinBtn);
+      }
     } else {
       lineEl.textContent = text;
     }
 
     this.outputElement.appendChild(lineEl);
+  }
+
+  public pinEvidence(id: string): void {
+    const isAlreadyPinned = this.stateMachine.getPins().has(id);
+    if (isAlreadyPinned) {
+      this.synth?.playKeyTick();
+      this.renderLine(`[evidence '${id}' already pinned to Board.]`, 'normal');
+      this.scrollToBottom();
+      return;
+    }
+
+    this.stateMachine.pin(id);
+    this.executor.execute(`pin ${id}`);
+    this.synth?.playPinClick();
+
+    const allBtns = this.outputElement.querySelectorAll(`[data-pin-id="${id}"]`);
+    allBtns.forEach((btn: any) => {
+      btn.classList.add('pinned');
+      btn.textContent = '[PINNED]';
+    });
+
+    this.renderLine(`[pinned '${id}' to Evidence Board.]`, 'normal');
+    this.scrollToBottom();
   }
 
   private enrichTokens(text: string): string {

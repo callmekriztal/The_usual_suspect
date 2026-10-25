@@ -164,6 +164,7 @@ export function loadSessionStartup(
 }
 
 export const WINDOWS_KEY = 'dead_pixels_windows_v1';
+export const BOARD_CARDS_KEY = 'dead_pixels_board_cards_v1';
 
 /**
  * Panic recovery: purges local storage and creates fresh in-memory instances.
@@ -177,6 +178,7 @@ export function purgeAndReboot(
       window.localStorage.removeItem(STAGING_KEY);
       window.localStorage.removeItem(LEGACY_KEY);
       window.localStorage.removeItem(WINDOWS_KEY);
+      window.localStorage.removeItem(BOARD_CARDS_KEY);
     }
   } catch (err: any) {
     if (onStorageError) {

@@ -1,7 +1,7 @@
 // DEAD PIXELS - Evidence Board Application (src/ui/apps/board.ts)
 // Interactive corkboard with SVG yarn strands, contradiction connections, owner deduction, and reveal flip
 
-import { GameStateMachine, GameStateSnapshot, REQUIRED_CONNECTIONS } from '../../engine/state';
+import { GameStateMachine, GameStateSnapshot, REQUIRED_CONNECTIONS, makeConnectionKey } from '../../engine/state';
 import { VirtualFileSystem } from '../../engine/vfs';
 import { EndingCoordinator } from '../../engine/ending';
 import { TokenRegistry } from '../../engine/tokens';
@@ -24,7 +24,10 @@ interface CardCoord {
   snippet: string;
 }
 
+export const BOARD_CARDS_STORAGE_KEY = 'dead_pixels_board_cards_v1';
+
 const PIN_METADATA: Record<string, CardCoord> = {
+  // Contradiction pins (canonical coordinates)
   'aud:frag_2': {
     x: 60,
     y: 50,
@@ -60,7 +63,149 @@ const PIN_METADATA: Record<string, CardCoord> = {
     title: 'SMS ...4471 [22:40]',
     snippet: '22:40 IST: "im downstairs"',
   },
+
+  // Audio memos
+  'aud:frag_1': {
+    x: 600,
+    y: 50,
+    type: 'AUDIO MEMO',
+    title: 'rec_0912_2236.wav [Frag 1]',
+    snippet: '18 MHz: Phone light outside hostel window.',
+  },
+  'aud:frag_3': {
+    x: 600,
+    y: 190,
+    type: 'AUDIO MEMO',
+    title: 'rec_0912_2236.wav [Frag 3]',
+    snippet: '81 MHz: "I\'m not going down. I know who it is."',
+  },
+
+  // Access log anomalies
+  'log:login_0908': {
+    x: 600,
+    y: 330,
+    type: 'ACCESS LOG',
+    title: 'access.log [09-08 Login]',
+    snippet: '02:14:51 login acct=nila dev=DEV-7F3A method=saved_password',
+  },
+  'log:login_19c2_0912': {
+    x: 600,
+    y: 470,
+    type: 'ACCESS LOG',
+    title: 'access.log [09-12 Login]',
+    snippet: '21:12:30 login acct=nila dev=DEV-19C2 app=photos_shared',
+  },
+  'log:deactivated_kiran': {
+    x: 320,
+    y: 220,
+    type: 'ACCESS LOG',
+    title: 'access.log [09-12 Deact]',
+    snippet: '21:14:02 acct_deactivated user=kiran.s source=college_portal',
+  },
+  'log:phone_changed_0914': {
+    x: 820,
+    y: 330,
+    type: 'ACCESS LOG',
+    title: 'access.log [09-14 Phone]',
+    snippet: '02:50:33 phone_changed acct=nila note=old number removed',
+  },
+  'log:sync_final_1022': {
+    x: 820,
+    y: 470,
+    type: 'ACCESS LOG',
+    title: 'access.log [Final Sync]',
+    snippet: '23:41:07 sync final acct=nila dev=DEV-7F3A new=2',
+  },
+
+  // Timeline Markers
+  'src:dev19c2_2112': {
+    x: 820,
+    y: 50,
+    type: 'TIMELINE MARKER',
+    title: 'Kiran Laptop [21:12]',
+    snippet: '21:12 login DEV-19C2 (Kiran old lab laptop)',
+  },
+  'src:kiran_deact_2114': {
+    x: 820,
+    y: 190,
+    type: 'TIMELINE MARKER',
+    title: 'Deactivation [21:14]',
+    snippet: '21:14 kiran.s account deactivated',
+  },
+
+  // Night Messages
+  'msg:4471_2241': {
+    x: 60,
+    y: 530,
+    type: 'INTERCEPT',
+    title: 'SMS ...4471 [22:41]',
+    snippet: '22:41 IST: "come down. just 5 min"',
+  },
+  'msg:4471_2252': {
+    x: 320,
+    y: 530,
+    type: 'INTERCEPT',
+    title: 'SMS ...4471 [22:52]',
+    snippet: '22:52 IST: "ok. ill wait"',
+  },
+  'msg:4471_2330': {
+    x: 600,
+    y: 610,
+    type: 'INTERCEPT',
+    title: 'SMS ...4471 [23:30]',
+    snippet: '23:30 IST: "still here"',
+  },
+
+  // Photos
+  'photo:img_0911_1752': {
+    x: 1040,
+    y: 50,
+    type: 'SURVEILLANCE',
+    title: 'IMG_0911_1752.jpg',
+    snippet: '11 Sep 17:52: Third-floor window daylight.',
+  },
+  'photo:img_0911_2214': {
+    x: 1040,
+    y: 190,
+    type: 'SURVEILLANCE',
+    title: 'IMG_0911_2214.jpg',
+    snippet: '11 Sep 22:14: Window dark.',
+  },
+  'photo:img_0912_1805': {
+    x: 1040,
+    y: 330,
+    type: 'SURVEILLANCE',
+    title: 'IMG_0912_1805.jpg',
+    snippet: '12 Sep 18:05: Curtains drawn.',
+  },
+  'photo:img_0912_2250': {
+    x: 1040,
+    y: 470,
+    type: 'SURVEILLANCE',
+    title: 'IMG_0912_2250.jpg',
+    snippet: '12 Sep 22:50: Ground floor exit.',
+  },
+  'photo:img_0912_2330': {
+    x: 1040,
+    y: 610,
+    type: 'SURVEILLANCE',
+    title: 'IMG_0912_2330.jpg',
+    snippet: '12 Sep 23:30: Block C gate closed.',
+  },
 };
+
+function getCardCoord(pinId: string, index: number): CardCoord {
+  if (PIN_METADATA[pinId]) return PIN_METADATA[pinId];
+  const col = index % 4;
+  const row = Math.floor(index / 4);
+  return {
+    x: 580 + col * 210,
+    y: 50 + row * 160,
+    type: 'EVIDENCE',
+    title: pinId,
+    snippet: 'Pinned case evidence note',
+  };
+}
 
 export class EvidenceBoardApp {
   private container: HTMLElement;
@@ -170,6 +315,53 @@ export class EvidenceBoardApp {
     }
   }
 
+  private loadSavedPositions(): Record<string, { x: number; y: number }> {
+    if (
+      typeof window === 'undefined' ||
+      !window.localStorage ||
+      typeof window.localStorage.getItem !== 'function'
+    ) {
+      return {};
+    }
+    try {
+      const raw = window.localStorage.getItem(BOARD_CARDS_STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const validated: Record<string, { x: number; y: number }> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (
+            v &&
+            typeof v === 'object' &&
+            typeof (v as any).x === 'number' &&
+            typeof (v as any).y === 'number'
+          ) {
+            validated[k] = { x: (v as any).x, y: (v as any).y };
+          }
+        }
+        return validated;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  }
+
+  private savePosition(id: string, x: number, y: number): void {
+    if (
+      typeof window === 'undefined' ||
+      !window.localStorage ||
+      typeof window.localStorage.setItem !== 'function'
+    ) {
+      return;
+    }
+    try {
+      const current = this.loadSavedPositions();
+      current[id] = { x, y };
+      window.localStorage.setItem(BOARD_CARDS_STORAGE_KEY, JSON.stringify(current));
+    } catch {}
+  }
+
   private render(state: Readonly<GameStateSnapshot>): void {
     // 1. Render Pinned Cards
     this.renderPinnedCards(state);
@@ -185,26 +377,40 @@ export class EvidenceBoardApp {
   }
 
   private renderPinnedCards(state: Readonly<GameStateSnapshot>): void {
-    // Remove existing pin cards
+    // Remove existing pin cards and empty state notice
     const existingCards = this.corkboardEl.querySelectorAll('.pin-card');
     existingCards.forEach((c) => c.parentElement?.removeChild(c));
+    const emptyState = this.corkboardEl.querySelector('.board-empty-state');
+    if (emptyState) emptyState.parentElement?.removeChild(emptyState);
 
-    const activePins = state.pins.length > 0 ? state.pins : Object.keys(PIN_METADATA);
+    const activePins = state.pins;
 
-    for (const pinId of activePins) {
-      const meta = PIN_METADATA[pinId] ?? {
-        x: 100,
-        y: 100,
-        type: 'EVIDENCE',
-        title: pinId,
-        snippet: 'Pinned case evidence note',
-      };
+    // Render clean empty state when no evidence has been pinned
+    if (activePins.length === 0) {
+      const emptyEl = document.createElement('div');
+      emptyEl.className = 'board-empty-state';
+      emptyEl.innerHTML = `
+        <div class="empty-icon">📌</div>
+        <div class="empty-title">EVIDENCE BOARD IS EMPTY</div>
+        <div class="empty-subtitle">Discover and pin clues from Terminal, Intercepted Messages, Audio Player, or Files to begin connecting strands.</div>
+      `;
+      this.corkboardEl.appendChild(emptyEl);
+      return;
+    }
+
+    const savedPositions = this.loadSavedPositions();
+
+    activePins.forEach((pinId, index) => {
+      const defaultCoord = getCardCoord(pinId, index);
+      const saved = savedPositions[pinId];
+      const posX = saved?.x ?? defaultCoord.x;
+      const posY = saved?.y ?? defaultCoord.y;
 
       const card = document.createElement('div');
       card.className = 'pin-card';
       card.setAttribute('data-pin-id', pinId);
-      card.style.left = `${meta.x}px`;
-      card.style.top = `${meta.y}px`;
+      card.style.left = `${posX}px`;
+      card.style.top = `${posY}px`;
 
       if (this.selectedPinId === pinId) {
         card.classList.add('selected');
@@ -216,29 +422,110 @@ export class EvidenceBoardApp {
 
       const typeEl = document.createElement('div');
       typeEl.className = 'pin-type';
-      typeEl.textContent = meta.type;
+      typeEl.textContent = defaultCoord.type;
       card.appendChild(typeEl);
 
       const titleEl = document.createElement('div');
       titleEl.className = 'pin-title';
-      titleEl.textContent = meta.title;
+      titleEl.textContent = defaultCoord.title;
       card.appendChild(titleEl);
 
       const snippetEl = document.createElement('div');
       snippetEl.className = 'pin-snippet';
-      snippetEl.textContent = meta.snippet;
+      snippetEl.textContent = defaultCoord.snippet;
       card.appendChild(snippetEl);
 
+      // Card dragging & click management
+      let isDragging = false;
+      let startPointerX = 0;
+      let startPointerY = 0;
+      let startCardX = 0;
+      let startCardY = 0;
+      let hasDragged = false;
+
+      const onPointerDown = (e: PointerEvent) => {
+        if (
+          this.stateMachine.getRevealPhase() === 'flipping' ||
+          this.stateMachine.getEnding() !== null
+        ) {
+          return;
+        }
+
+        isDragging = true;
+        hasDragged = false;
+        startPointerX = e.clientX;
+        startPointerY = e.clientY;
+        startCardX = parseInt(card.style.left, 10) || posX;
+        startCardY = parseInt(card.style.top, 10) || posY;
+
+        const onPointerMove = (moveEvent: PointerEvent) => {
+          if (!isDragging) return;
+          const deltaX = moveEvent.clientX - startPointerX;
+          const deltaY = moveEvent.clientY - startPointerY;
+
+          if (!hasDragged && Math.hypot(deltaX, deltaY) > 4) {
+            hasDragged = true;
+            card.classList.add('dragging');
+          }
+
+          if (hasDragged) {
+            const corkRect = typeof this.corkboardEl.getBoundingClientRect === 'function'
+              ? this.corkboardEl.getBoundingClientRect()
+              : { width: 1200, height: 700 };
+            const cardWidth = card.offsetWidth || 180;
+            const cardHeight = card.offsetHeight || 100;
+            const maxW = Math.max(100, (corkRect.width || 1200) - cardWidth - 10);
+            const maxH = Math.max(100, (corkRect.height || 700) - cardHeight - 10);
+
+            const nextX = Math.max(10, Math.min(maxW, startCardX + deltaX));
+            const nextY = Math.max(10, Math.min(maxH, startCardY + deltaY));
+
+            card.style.left = `${nextX}px`;
+            card.style.top = `${nextY}px`;
+            this.renderStrands(this.stateMachine.getSnapshot());
+          }
+        };
+
+        const onPointerUp = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          window.removeEventListener('pointermove', onPointerMove);
+          window.removeEventListener('pointerup', onPointerUp);
+          window.removeEventListener('pointercancel', onPointerUp);
+
+          if (hasDragged) {
+            card.classList.remove('dragging');
+            const finalX = parseInt(card.style.left, 10);
+            const finalY = parseInt(card.style.top, 10);
+            this.savePosition(pinId, finalX, finalY);
+            this.synth?.playPinClick();
+          }
+        };
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+      };
+
+      card.addEventListener('pointerdown', onPointerDown);
+
       card.addEventListener('click', () => {
+        if (hasDragged) {
+          hasDragged = false;
+          return;
+        }
         this.handlePinClick(pinId);
       });
 
       this.corkboardEl.appendChild(card);
-    }
+    });
   }
 
   private handlePinClick(pinId: string): void {
-    if (this.stateMachine.getRevealPhase() === 'flipping' || this.stateMachine.getEnding() !== null) {
+    if (
+      this.stateMachine.getRevealPhase() === 'flipping' ||
+      this.stateMachine.getEnding() !== null
+    ) {
       return;
     }
 
@@ -246,7 +533,7 @@ export class EvidenceBoardApp {
 
     if (!this.selectedPinId) {
       this.selectedPinId = pinId;
-      this.statusTextEl.innerHTML = `SELECTED <span class="status-highlight">${pinId}</span>. CLICK ANOTHER PIN TO CONNECT.`;
+      this.statusTextEl.innerHTML = `SELECTED <span class="status-highlight">${pinId}</span>. CLICK ANOTHER PIN TO CONNECT OR DISCONNECT.`;
       this.render(this.stateMachine.getSnapshot());
       return;
     }
@@ -258,14 +545,24 @@ export class EvidenceBoardApp {
       return;
     }
 
-    // Connect two pins
-    const res = this.stateMachine.connect(this.selectedPinId, pinId);
-    if (!res.success) {
-      this.statusTextEl.textContent = res.error || 'Connection rejected.';
-    } else if (res.alreadyConnected) {
-      this.statusTextEl.textContent = 'Strand already connected.';
+    const key = makeConnectionKey(this.selectedPinId, pinId);
+    if (this.stateMachine.getConnections().has(key)) {
+      // Disconnect existing connection
+      const res = this.stateMachine.disconnect(this.selectedPinId, pinId);
+      if (res.success) {
+        this.synth?.playPinClick();
+        this.statusTextEl.innerHTML = `REMOVED STRAND <span class="status-highlight">${this.selectedPinId}</span> ⇎ <span class="status-highlight">${pinId}</span>`;
+      } else {
+        this.statusTextEl.textContent = res.error || 'Failed to remove connection.';
+      }
     } else {
-      this.statusTextEl.innerHTML = `CONNECTED <span class="status-highlight">${this.selectedPinId}</span> ↔ <span class="status-highlight">${pinId}</span>`;
+      // Connect two pins
+      const res = this.stateMachine.connect(this.selectedPinId, pinId);
+      if (!res.success) {
+        this.statusTextEl.textContent = res.error || 'Connection rejected.';
+      } else {
+        this.statusTextEl.innerHTML = `CONNECTED <span class="status-highlight">${this.selectedPinId}</span> ↔ <span class="status-highlight">${pinId}</span>`;
+      }
     }
 
     this.selectedPinId = null;
@@ -285,14 +582,21 @@ export class EvidenceBoardApp {
 
       if (!cardA || !cardB) continue;
 
-      const rectA = {
-        x: cardA.offsetLeft + cardA.offsetWidth / 2,
-        y: cardA.offsetTop + 12,
+      const getCoord = (card: HTMLElement) => {
+        const left =
+          card.offsetLeft !== undefined && card.offsetLeft !== 0
+            ? card.offsetLeft
+            : parseInt(card.style.left, 10) || 0;
+        const top =
+          card.offsetTop !== undefined && card.offsetTop !== 0
+            ? card.offsetTop
+            : parseInt(card.style.top, 10) || 0;
+        const width = card.offsetWidth || 180;
+        return { x: left + width / 2, y: top + 12 };
       };
-      const rectB = {
-        x: cardB.offsetLeft + cardB.offsetWidth / 2,
-        y: cardB.offsetTop + 12,
-      };
+
+      const rectA = getCoord(cardA);
+      const rectB = getCoord(cardB);
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', String(rectA.x));

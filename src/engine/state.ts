@@ -285,6 +285,46 @@ export class GameStateMachine {
   }
 
   /**
+   * Disconnects two evidence nodes with yarn on the evidence board.
+   */
+  public disconnect(
+    idA: string,
+    idB: string
+  ): { success: boolean; error?: string } {
+    this.checkPanic();
+
+    if (this.revealPhase === 'flipping' || this.ending !== null) {
+      return { success: false, error: 'Evidence board is immutable during flip and conclusion sequence.' };
+    }
+
+    const key = makeConnectionKey(idA, idB);
+    if (!this.connections.has(key)) {
+      return { success: false, error: 'No connection exists between these evidence nodes.' };
+    }
+
+    this.connections.delete(key);
+    this.notify();
+    return { success: true };
+  }
+
+  /**
+   * Toggles connection between two pinned evidence nodes.
+   */
+  public toggleConnection(
+    idA: string,
+    idB: string
+  ): { success: boolean; connected: boolean; error?: string } {
+    const key = makeConnectionKey(idA, idB);
+    if (this.connections.has(key)) {
+      const res = this.disconnect(idA, idB);
+      return { success: res.success, connected: false, error: res.error };
+    } else {
+      const res = this.connect(idA, idB);
+      return { success: res.success, connected: res.success && !res.alreadyConnected, error: res.error };
+    }
+  }
+
+  /**
    * Player opens the surveillance photos folder.
    * Requires photos to be unlocked (>= 2 strands solved).
    * Elevates truth level to 2, causing real labels on hover and opening owner node.
@@ -622,6 +662,7 @@ export class GameStateMachine {
         window.localStorage.removeItem('dead_pixels_session_v1');
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
         window.localStorage.removeItem('dead_pixels_windows_v1');
+        window.localStorage.removeItem('dead_pixels_board_cards_v1');
       }
     } catch {
       // Ignored
