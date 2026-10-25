@@ -621,6 +621,7 @@ export class GameStateMachine {
         window.localStorage.removeItem(STORAGE_KEY);
         window.localStorage.removeItem('dead_pixels_session_v1');
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
+        window.localStorage.removeItem('dead_pixels_windows_v1');
       }
     } catch {
       // Ignored

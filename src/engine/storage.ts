@@ -163,6 +163,8 @@ export function loadSessionStartup(
   return { recovered: false, cleanBoot: true };
 }
 
+export const WINDOWS_KEY = 'dead_pixels_windows_v1';
+
 /**
  * Panic recovery: purges local storage and creates fresh in-memory instances.
  */
@@ -174,6 +176,7 @@ export function purgeAndReboot(
       window.localStorage.removeItem(PRIMARY_KEY);
       window.localStorage.removeItem(STAGING_KEY);
       window.localStorage.removeItem(LEGACY_KEY);
+      window.localStorage.removeItem(WINDOWS_KEY);
     }
   } catch (err: any) {
     if (onStorageError) {

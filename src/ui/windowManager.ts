@@ -15,7 +15,11 @@ export interface WindowInstance {
 export type WindowChangeCallback = (windows: WindowInstance[]) => void;
 export type ActiveChangeCallback = (activeId: string | null) => void;
 
+export const WINDOWS_STORAGE_KEY = 'dead_pixels_windows_v1';
+
 export class WindowManager {
+  public static readonly STORAGE_KEY = WINDOWS_STORAGE_KEY;
+
   private container: HTMLElement;
   private windows: Map<string, WindowInstance> = new Map();
   private activeWindowId: string | null = null;
@@ -28,40 +32,107 @@ export class WindowManager {
     this.container = container;
   }
 
+  private loadSavedWindowState(id: string): { minimized: boolean; x: number; y: number; zIndex: number } | null {
+    if (typeof window === 'undefined' || !window.localStorage || typeof window.localStorage.getItem !== 'function') {
+      return null;
+    }
+    try {
+      const raw = window.localStorage.getItem(WindowManager.STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed[id] && typeof parsed[id].minimized === 'boolean') {
+        return parsed[id];
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  public saveAllWindowsState(): void {
+    if (typeof window === 'undefined' || !window.localStorage || typeof window.localStorage.setItem !== 'function') {
+      return;
+    }
+    try {
+      let existing: Record<string, any> = {};
+      const raw = window.localStorage.getItem(WindowManager.STORAGE_KEY);
+      if (raw) {
+        try {
+          existing = JSON.parse(raw) || {};
+        } catch {}
+      }
+      for (const [id, win] of this.windows.entries()) {
+        existing[id] = {
+          minimized: win.minimized,
+          x: win.x,
+          y: win.y,
+          zIndex: win.zIndex,
+        };
+      }
+      window.localStorage.setItem(WindowManager.STORAGE_KEY, JSON.stringify(existing));
+    } catch {}
+  }
+
+  public clearSavedWindowState(): void {
+    if (typeof window === 'undefined' || !window.localStorage || typeof window.localStorage.removeItem !== 'function') {
+      return;
+    }
+    try {
+      window.localStorage.removeItem(WindowManager.STORAGE_KEY);
+    } catch {}
+  }
+
   public registerWindow(options: {
     id: string;
     title: string;
     element: HTMLElement;
     initialX?: number;
     initialY?: number;
+    initialMinimized?: boolean;
     onFocus?: () => void;
   }): WindowInstance {
-    const { id, title, element, initialX = 60, initialY = 40, onFocus } = options;
+    const { id, title, element, initialX = 60, initialY = 40, initialMinimized = false, onFocus } = options;
 
     if (this.windows.has(id)) {
       return this.windows.get(id)!;
     }
+
+    const saved = this.loadSavedWindowState(id);
+    const isMinimized = saved !== null ? saved.minimized : initialMinimized;
+    const posX = saved?.x ?? initialX;
+    const posY = saved?.y ?? initialY;
 
     this.topZIndex++;
     const winInstance: WindowInstance = {
       id,
       title,
       element,
-      minimized: false,
-      zIndex: this.topZIndex,
-      x: initialX,
-      y: initialY,
+      minimized: isMinimized,
+      zIndex: saved?.zIndex ?? this.topZIndex,
+      x: posX,
+      y: posY,
       onFocus,
     };
 
     element.style.position = 'absolute';
-    element.style.left = `${initialX}px`;
-    element.style.top = `${initialY}px`;
-    element.style.zIndex = String(this.topZIndex);
+    element.style.left = `${posX}px`;
+    element.style.top = `${posY}px`;
+    element.style.zIndex = String(winInstance.zIndex);
+
+    if (isMinimized) {
+      element.classList.add('minimized');
+      element.classList.add('inactive');
+      element.classList.remove('active');
+    }
 
     this.windows.set(id, winInstance);
     this.setupWindowInteractions(winInstance);
-    this.focusWindow(id);
+
+    if (!isMinimized) {
+      this.focusWindow(id);
+    } else {
+      this.notifyWindowsChange();
+    }
 
     return winInstance;
   }
@@ -153,6 +224,7 @@ export class WindowManager {
         window.removeEventListener('pointermove', onPointerMove);
         window.removeEventListener('pointerup', onPointerUp);
         window.removeEventListener('pointercancel', onPointerUp);
+        this.saveAllWindowsState();
       };
 
       window.addEventListener('pointermove', onPointerMove);
@@ -192,6 +264,7 @@ export class WindowManager {
     }
     this.notifyActiveChange();
     this.notifyWindowsChange();
+    this.saveAllWindowsState();
   }
 
   public minimizeWindow(id: string): void {
@@ -220,6 +293,7 @@ export class WindowManager {
 
     this.notifyActiveChange();
     this.notifyWindowsChange();
+    this.saveAllWindowsState();
   }
 
   public restoreWindow(id: string): void {

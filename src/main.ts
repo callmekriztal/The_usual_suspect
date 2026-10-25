@@ -63,6 +63,7 @@ export function applyUrlShortcuts(
         window.localStorage.removeItem('dead_pixels_session_v1');
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
         window.localStorage.removeItem('dead_pixels_game_state_v4');
+        window.localStorage.removeItem('dead_pixels_windows_v1');
       }
     } catch {}
   }
@@ -129,6 +130,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         window.localStorage.removeItem('dead_pixels_session_v1');
         window.localStorage.removeItem('dead_pixels_session_v1_stage');
         window.localStorage.removeItem('dead_pixels_game_state_v4');
+        window.localStorage.removeItem('dead_pixels_windows_v1');
       }
     } catch {}
   }
@@ -217,6 +219,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         element: terminal.getWindowElement(),
         initialX: 60,
         initialY: 40,
+        initialMinimized: false,
         onFocus: () => terminal.focus(),
       });
     }
@@ -236,6 +239,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         element: messages.getWindowElement(),
         initialX: 560,
         initialY: 50,
+        initialMinimized: true,
       });
     }
 
@@ -256,6 +260,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         element: player.getWindowElement(),
         initialX: 160,
         initialY: 120,
+        initialMinimized: true,
       });
     }
 
@@ -275,6 +280,7 @@ export function initializeShell(initialSearch?: string): AppContext {
         element: files.getWindowElement(),
         initialX: 220,
         initialY: 70,
+        initialMinimized: true,
       });
     }
 
@@ -295,7 +301,15 @@ export function initializeShell(initialSearch?: string): AppContext {
         element: board.getWindowElement(),
         initialX: 180,
         initialY: 40,
+        initialMinimized: true,
       });
+
+      // Ensure terminal is focused if open on startup
+      const termWin = windowManager.getWindows().find((w) => w.id === 'terminal');
+      if (termWin && !termWin.minimized) {
+        windowManager.focusWindow('terminal');
+        terminal.focus();
+      }
     }
 
     // Keep body data-truth and audio synth synchronized with GameStateMachine
